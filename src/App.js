@@ -33,7 +33,7 @@ class App extends Component {
           id: "3",
           taskName: "Go to the gym",
           type: "Done",
-          backgroundColor: "blue"
+          backgroundColor: "red"
         },
         {
           id: "4",
