@@ -27,7 +27,7 @@ class App extends Component {
           id: "2",
           taskName: "Pay bills",
           type: "inProgress",
-          backgroundColor: "green"
+          backgroundColor: "red"
         },
         {
           id: "3",
