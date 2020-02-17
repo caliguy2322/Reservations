@@ -33,16 +33,28 @@ steps:
       npm run build
     displayName: "npm install and build"
 
-  - task: PublishBuildArtifacts@1
+  - task: ArchiveFiles@2
+    displayName: "Archive files"
     inputs:
-      pathtoPublish: $(build.artifactstagingdirectory) # dist or build filess
+      rootFolderOrFile: "$(System.DefaultWorkingDirectory)"
+      includeRootFolder: false
+      archiveType: zip
+      archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+      replaceExistingArchive: true
 
-  - task: CopyFiles@2
+  - upload: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+    artifact: drop
+
+  - task: AzureRmWebAppDeployment@4
+    displayName: "Azure App Service Deploy: ReservationsRocoto"
     inputs:
-      SourceFolder: "$(System.DefaultWorkingDirectory)"
-      Contents: |
-        **\*.js
-        package.json
-      TargetFolder: "$(Build.ArtifactStagingDirectory)"
-
-  - task: PublishBuildArtifacts@1
+      azureSubscription: $(azureSubscription)
+      appType: webAppLinux
+      WebAppName: $(webAppName)
+      packageForLinux: "$(Pipeline.Workspace)/drop/$(Build.BuildId).zip"
+      RuntimeStack: "NODE|10.10"
+      StartupCommand: "npm run start"
+      ScriptType: "Inline Script"
+      InlineScript: |
+        npm install
+        npm run build --if-present
