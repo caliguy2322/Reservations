@@ -1,10 +1,13 @@
-# Node.js React Web App to Linux on Azure
-# Build a Node.js React app and deploy it to Azure as a Linux web app.
+# Node.js with React
+# Build a Node.js project that uses React.
 # Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascriptttyy
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
 
 trigger:
   - master
+
+pool:
+  vmImage: "ubuntu-latest"
 
 variables:
   # Azure Resource Manager connection created during pipeline creation
@@ -20,28 +23,26 @@ variables:
   vmImageName: "ubuntu-latest"
 
 steps:
-  - task: ArchiveFiles@2
-    displayName: "Archive files"
+  - task: NodeTool@0
     inputs:
-      rootFolderOrFile: "$(System.DefaultWorkingDirectory)"
-      includeRootFolder: false
-      archiveType: zip
-      archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-      replaceExistingArchive: true
+      versionSpec: "10.x"
+    displayName: "Install Node.js"
 
-  - upload: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-    artifact: drop
+  - script: |
+      npm install
+      npm run build
+    displayName: "npm install and build"
 
-  - task: AzureRmWebAppDeployment@4
-    displayName: "Azure App Service Deploy: ReservationsRocoto"
+  - task: PublishBuildArtifacts@1
     inputs:
-      azureSubscription: $(azureSubscription)
-      appType: webAppLinux
-      WebAppName: $(webAppName)
-      packageForLinux: "$(Pipeline.Workspace)/drop/$(Build.BuildId).zip"
-      RuntimeStack: "NODE|10.10"
-      StartupCommand: "npm run start"
-      ScriptType: "Inline Script"
-      InlineScript: |
-        npm install
-        npm run build --if-present
+      pathtoPublish: $(build.artifactstagingdirectory) # dist or build files
+
+  - task: CopyFiles@2
+    inputs:
+      SourceFolder: "$(System.DefaultWorkingDirectory)"
+      Contents: |
+        **\*.js
+        package.json
+      TargetFolder: "$(Build.ArtifactStagingDirectory)"
+
+  - task: PublishBuildArtifacts@1
