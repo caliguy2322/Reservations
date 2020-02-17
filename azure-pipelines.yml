@@ -14,24 +14,22 @@ variables:
   buildOutputFolder: "build"
 
 steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: "10.x"
+    displayName: "Install Node.js"
+
   - script: |
-      pushd $(projectFolder) && npm install && popd
-      pushd $(projectFolder) && npm run build && popd
+      npm install
+      npm run build
+    displayName: "npm install and build"
 
-  - task: CopyFiles@2
-    inputs:
-      sourceFolder: "$(buildOutputFolder)"
-      contents: "**/*"
-      targetFolder: "$(Build.ArtifactStagingDirectory)"
-      cleanTargetFolder: true
-
-  - task: ArchiveFiles@2
-    inputs:
-      rootFolderOrFile: $(Build.ArtifactStagingDirectory)
-      archiveType: "zip"
-      archiveFile: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
-      includeRootFolder: false
+  - script: |
+      zip -r result.zip . -x .git/**\* > /dev/null
+    displayName: "package results"
 
   - task: PublishBuildArtifacts@1
     inputs:
-      pathtoPublish: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
+      pathtoPublish: "$(Build.SourcesDirectory)/result.zip"
+      artifactName: "drop"
+    displayName: "upload artifacts"
