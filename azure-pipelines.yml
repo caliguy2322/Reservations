@@ -10,8 +10,8 @@ pool:
   vmImage: "ubuntu-latest"
 
 variables:
-  projectFolder: "src/react"
-  buildOutputFolder: "src/react/build"
+  projectFolder: "src"
+  buildOutputFolder: "public"
 
 steps:
   - script: |
