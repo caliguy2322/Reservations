@@ -1,97 +1,71 @@
-# Node.js with React
-# Build a Node.js project that uses React.
+# Node.js React Web App to Linux on Azure
+# Build a Node.js React app and deploy it to Azure as a Linux web app.
 # Add steps that analyze code, save build artifacts, deploy, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/javascripttt
 
 trigger:
-  - master
-
-pool:
-  vmImage: "ubuntu-latest"
+- master
 
 variables:
-  projectFolder: "src"
-  buildOutputFolder: "public"
 
-steps:
-  - script: |
-      pushd $(projectFolder) && npm install && popd
-      pushd $(projectFolder) && npm run build && popd
+  # Azure Resource Manager connection created during pipeline creation
+  azureSubscription: '71d18f85-881b-44b7-8605-cc3ad719d866'
 
-  - task: CopyFiles@2
-    inputs:
-      sourceFolder: "$(buildOutputFolder)"
-      contents: "**/*"
-      targetFolder: "$(Build.ArtifactStagingDirectory)"
-      cleanTargetFolder: true
+  # Web app name
+  webAppName: 'ReservationsRocoto'
+  
+  # Environment name
+  environmentName: 'ReservationsRocoto'
 
-  ## Archive the files into a zip file for publishing
-  - task: ArchiveFiles@2
-    inputs:
-      rootFolderOrFile: $(Build.ArtifactStagingDirectory)
-      archiveType: "zip"
-      archiveFile: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
-      includeRootFolder: false
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
 
-  ## Publish the zip file
-  - task: PublishBuildArtifacts@1
-    inputs:
-      pathtoPublish: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
-# variables:
-#   projectFolder: "src"
-#   buildOutputFolder: "public"
+stages:
+- stage: Build
+  displayName: Build stage
+  jobs:  
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
 
-# steps:
-#   - task: NodeTool@0
-#     inputs:
-#       versionSpec: "10.x"
-#     displayName: "Install Node.js"
+    steps:
+    - task: ArchiveFiles@2
+      displayName: 'Archive files'
+      inputs:
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+        replaceExistingArchive: true
 
-#   - script: |
-#       npm install
-#       npm run build
-#     displayName: "npm install and build"
+    - upload: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+      artifact: drop
 
-#   # - task: CopyFiles@2
-#   #   inputs:
-#   #     sourceFolder: "$(buildOutputFolder)"
-#   #     contents: "**/*"
-#   #     targetFolder: "$(Build.ArtifactStagingDirectory)/drop"
-#   #     cleanTargetFolder: true
-
-#   - task: CopyFiles@2
-#     displayName: "Copy Files to: $(Build.ArtifactStagingDirectory)"
-#     inputs:
-#       SourceFolder: "$(buildOutputFolder)"
-#       TargetFolder: "$(Build.ArtifactStagingDirectory)"
-
-#   - task: PublishBuildArtifacts@1
-#     displayName: "Publish Artifact: drop"
-#     inputs:
-#       pathtoPublish: "$(Build.ArtifactStagingDirectory)"
-#       artifactName: "myWebsiteName"
-### Copy the client to the staging directory
-# - task: CopyFiles@2
-#   inputs:
-#     sourceFolder: "$(buildOutputFolder)"
-#     contents: "**/*"
-#     targetFolder: "$(Build.ArtifactStagingDirectory)"
-#     cleanTargetFolder: true
-# ## Archive the files into a zip file for publishing
-# - task: ArchiveFiles@2
-#   inputs:
-#     rootFolderOrFile: $(Build.ArtifactStagingDirectory)
-#     archiveType: "zip"
-#     archiveFile: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
-#     includeRootFolder: false
-# ## Publish the zip file
-# - task: PublishBuildArtifacts@1
-#   inputs:
-#     pathtoPublish: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
-# - script: |
-#     npm install
-#     npm run build
-#   displayName: "npm install and build"
-# - task: PublishBuildArtifacts@1
-#   inputs:
-#     pathtoPublish: $(build.artifactstagingdirectory) # dist or build files
+- stage: Deploy
+  displayName: Deploy stage
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy
+    environment: $(environmentName)
+    pool: 
+      vmImage: $(vmImageName)
+    strategy:
+      runOnce:
+        deploy:
+          steps:            
+          - task: AzureRmWebAppDeployment@4
+            displayName: 'Azure App Service Deploy: ReservationsRocoto'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              appType: webAppLinux
+              WebAppName: $(webAppName)
+              packageForLinux: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+              RuntimeStack: 'NODE|10.10'
+              StartupCommand: 'npm run start'
+              ScriptType: 'Inline Script'
+              InlineScript: |
+                npm install
+                npm run build --if-present
