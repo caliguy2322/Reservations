@@ -24,12 +24,12 @@ steps:
       npm run build
     displayName: "npm install and build"
 
-  - task: CopyFiles@2
-    inputs:
-      sourceFolder: "$(buildOutputFolder)"
-      contents: "**/*"
-      targetFolder: "$(Build.ArtifactStagingDirectory)/drop"
-      cleanTargetFolder: true
+  # - task: CopyFiles@2
+  #   inputs:
+  #     sourceFolder: "$(buildOutputFolder)"
+  #     contents: "**/*"
+  #     targetFolder: "$(Build.ArtifactStagingDirectory)/drop"
+  #     cleanTargetFolder: true
 
   - task: CopyFiles@2
     displayName: "Copy Files to: $(Build.ArtifactStagingDirectory)"
