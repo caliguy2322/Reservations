@@ -10,60 +10,88 @@ pool:
   vmImage: "ubuntu-latest"
 
 variables:
-  projectFolder: "src"
-  buildOutputFolder: "public"
+  projectFolder: "src/react"
+  buildOutputFolder: "src/react/build"
 
 steps:
-  - task: NodeTool@0
-    inputs:
-      versionSpec: "10.x"
-    displayName: "Install Node.js"
-
   - script: |
-      npm install
-      npm run build
-    displayName: "npm install and build"
-
-  # - task: CopyFiles@2
-  #   inputs:
-  #     sourceFolder: "$(buildOutputFolder)"
-  #     contents: "**/*"
-  #     targetFolder: "$(Build.ArtifactStagingDirectory)/drop"
-  #     cleanTargetFolder: true
+      pushd $(projectFolder) && npm install && popd
+      pushd $(projectFolder) && npm run build && popd
 
   - task: CopyFiles@2
-    displayName: "Copy Files to: $(Build.ArtifactStagingDirectory)"
     inputs:
-      SourceFolder: "$(buildOutputFolder)"
-      TargetFolder: "$(Build.ArtifactStagingDirectory)"
+      sourceFolder: "$(buildOutputFolder)"
+      contents: "**/*"
+      targetFolder: "$(Build.ArtifactStagingDirectory)"
+      cleanTargetFolder: true
 
-  - task: PublishBuildArtifacts@1
-    displayName: "Publish Artifact: drop"
+  ## Archive the files into a zip file for publishing
+  - task: ArchiveFiles@2
     inputs:
-      pathtoPublish: "$(Build.ArtifactStagingDirectory)"
-      artifactName: "myWebsiteName"
-    ### Copy the client to the staging directory
-  # - task: CopyFiles@2
-  #   inputs:
-  #     sourceFolder: "$(buildOutputFolder)"
-  #     contents: "**/*"
-  #     targetFolder: "$(Build.ArtifactStagingDirectory)"
-  #     cleanTargetFolder: true
-  # ## Archive the files into a zip file for publishing
-  # - task: ArchiveFiles@2
-  #   inputs:
-  #     rootFolderOrFile: $(Build.ArtifactStagingDirectory)
-  #     archiveType: "zip"
-  #     archiveFile: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
-  #     includeRootFolder: false
-  # ## Publish the zip file
-  # - task: PublishBuildArtifacts@1
-  #   inputs:
-  #     pathtoPublish: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
-  # - script: |
-  #     npm install
-  #     npm run build
-  #   displayName: "npm install and build"
-  # - task: PublishBuildArtifacts@1
-  #   inputs:
-  #     pathtoPublish: $(build.artifactstagingdirectory) # dist or build files
+      rootFolderOrFile: $(Build.ArtifactStagingDirectory)
+      archiveType: "zip"
+      archiveFile: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
+      includeRootFolder: false
+
+  ## Publish the zip file
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
+# variables:
+#   projectFolder: "src"
+#   buildOutputFolder: "public"
+
+# steps:
+#   - task: NodeTool@0
+#     inputs:
+#       versionSpec: "10.x"
+#     displayName: "Install Node.js"
+
+#   - script: |
+#       npm install
+#       npm run build
+#     displayName: "npm install and build"
+
+#   # - task: CopyFiles@2
+#   #   inputs:
+#   #     sourceFolder: "$(buildOutputFolder)"
+#   #     contents: "**/*"
+#   #     targetFolder: "$(Build.ArtifactStagingDirectory)/drop"
+#   #     cleanTargetFolder: true
+
+#   - task: CopyFiles@2
+#     displayName: "Copy Files to: $(Build.ArtifactStagingDirectory)"
+#     inputs:
+#       SourceFolder: "$(buildOutputFolder)"
+#       TargetFolder: "$(Build.ArtifactStagingDirectory)"
+
+#   - task: PublishBuildArtifacts@1
+#     displayName: "Publish Artifact: drop"
+#     inputs:
+#       pathtoPublish: "$(Build.ArtifactStagingDirectory)"
+#       artifactName: "myWebsiteName"
+### Copy the client to the staging directory
+# - task: CopyFiles@2
+#   inputs:
+#     sourceFolder: "$(buildOutputFolder)"
+#     contents: "**/*"
+#     targetFolder: "$(Build.ArtifactStagingDirectory)"
+#     cleanTargetFolder: true
+# ## Archive the files into a zip file for publishing
+# - task: ArchiveFiles@2
+#   inputs:
+#     rootFolderOrFile: $(Build.ArtifactStagingDirectory)
+#     archiveType: "zip"
+#     archiveFile: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
+#     includeRootFolder: false
+# ## Publish the zip file
+# - task: PublishBuildArtifacts@1
+#   inputs:
+#     pathtoPublish: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
+# - script: |
+#     npm install
+#     npm run build
+#   displayName: "npm install and build"
+# - task: PublishBuildArtifacts@1
+#   inputs:
+#     pathtoPublish: $(build.artifactstagingdirectory) # dist or build files
