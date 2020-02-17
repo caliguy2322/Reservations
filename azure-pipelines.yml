@@ -39,6 +39,9 @@ steps:
 
   - task: PublishBuildArtifacts@1
     displayName: "Publish Artifact: drop"
+    inputs:
+      pathtoPublish: "$(Build.ArtifactStagingDirectory)"
+      artifactName: "myWebsiteName"
     ## Copy the client to the staging directory
   # - task: CopyFiles@2
   #   inputs:
