@@ -10,8 +10,8 @@ pool:
   vmImage: "ubuntu 16.04"
 
 variables:
-  projectFolder: 'src'
-  buildOutputFolder: 'build'
+  projectFolder: "src"
+  buildOutputFolder: "build"
 
 steps:
   - script: |
@@ -19,25 +19,25 @@ steps:
       pushd $(projectFolder) && npm run build && popd
 
   - task: CopyFiles@2
-  inputs:
-    sourceFolder: '$(buildOutputFolder)' 
-    contents: '**/*' 
-    targetFolder: '$(Build.ArtifactStagingDirectory)'
-    cleanTargetFolder: true
+    inputs:
+      sourceFolder: "$(buildOutputFolder)"
+      contents: "**/*"
+      targetFolder: "$(Build.ArtifactStagingDirectory)"
+      cleanTargetFolder: true
 
   ## Archive the files into a zip file for publishing
   - task: ArchiveFiles@2
     inputs:
       rootFolderOrFile: $(Build.ArtifactStagingDirectory)
-      archiveType: 'zip'
-      archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+      archiveType: "zip"
+      archiveFile: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
       includeRootFolder: false
 
   ## Publish the zip file
   - task: PublishBuildArtifacts@1
     inputs:
       azureSubscription: $(azureSubscription)
-      pathtoPublish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'    
+      pathtoPublish: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
       StartupCommand: "npm run start"
       ScriptType: "Inline Script"
       InlineScript: |
