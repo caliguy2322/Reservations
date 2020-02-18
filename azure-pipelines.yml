@@ -51,16 +51,15 @@ pool:
   vmImage: "ubuntu 16.04"
 
 steps:
-  - task: CopyFiles@2
-    displayName: "Copy files to compile folder"
+  - task: ArchiveFiles@2
+    displayName: "Archive files"
     inputs:
-      sourceFolder: "$(buildOutputFolder)"
-      contents: "**/*"
-      targetFolder: "$(Build.ArtifactStagingDirectory)"
-      cleanTargetFolder: true
+      rootFolderOrFile: "$(System.DefaultWorkingDirectory)"
+      includeRootFolder: false
+      archiveType: zip
+      archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+      replaceExistingArchive: true
       script: echo "hello world"
 
-  - task: PublishBuildArtifacts@1
-    displayName: "Publish Site"
-    inputs:
-      ArtifactName: Site
+  - upload: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+    artifact: drop
