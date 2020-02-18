@@ -6,34 +6,40 @@
 trigger:
   - master
 
-resources:
-  - repo: self
-    fetchDepth: 1
-
 pool:
   vmImage: "ubuntu 16.04"
 
 variables:
-  projectFolder: "src"
-  buildOutputFolder: "build"
+  projectFolder: 'src'
+  buildOutputFolder: 'build'
 
 steps:
-  - task: NodeTool@0
+  - script: |
+      pushd $(projectFolder) && npm install && popd
+      pushd $(projectFolder) && npm run build && popd
+
+  - task: CopyFiles@2
+  inputs:
+    sourceFolder: '$(buildOutputFolder)' 
+    contents: '**/*' 
+    targetFolder: '$(Build.ArtifactStagingDirectory)'
+    cleanTargetFolder: true
+
+  ## Archive the files into a zip file for publishing
+  - task: ArchiveFiles@2
     inputs:
-      versionSpec: "10.x"
-    displayName: "Install Node.js"
+      rootFolderOrFile: $(Build.ArtifactStagingDirectory)
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+      includeRootFolder: false
 
-  - script: |
-      npm install
-      npm run build
-    displayName: "npm install and build"
-
-  - script: |
-      zip -r result.zip . -x .git/**\* > /dev/null
-    displayName: "package results"
-
+  ## Publish the zip file
   - task: PublishBuildArtifacts@1
     inputs:
-      pathtoPublish: "$(Build.SourcesDirectory)/result.zip"
-      artifactName: "drop"
-    displayName: "upload artifacts"
+      azureSubscription: $(azureSubscription)
+      pathtoPublish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'    
+      StartupCommand: "npm run start"
+      ScriptType: "Inline Script"
+      InlineScript: |
+        npm install
+        npm run build --if-present
