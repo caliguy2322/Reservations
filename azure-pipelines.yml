@@ -52,8 +52,8 @@ pool:
 
 steps:
   - task: CopyFiles@2
+    command: echo "$(buildOutputFolder)"
     displayName: "Copy files to compile folder"
-    shell: echo "{{ Build.ArtifactStagingDirectory }}"
     inputs:
       sourceFolder: "$(buildOutputFolder)"
       contents: "**/*"
