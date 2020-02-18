@@ -3,43 +3,63 @@
 # Add steps that analyze code, save build artifacts, deploy, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
 
+# trigger:
+#   - master
+
+# pool:
+#   vmImage: "ubuntu 16.04"
+
+# variables:
+#   projectFolder: "src"
+#   buildOutputFolder: "build"
+
+# steps:
+#   - script: |
+#       pushd $(projectFolder) && npm install && popd
+#       pushd $(projectFolder) && npm run build && popd
+
+#   - task: CopyFiles@2
+#     inputs:
+#       sourceFolder: "$(buildOutputFolder)"
+#       contents: "**/*"
+#       targetFolder: "$(Build.ArtifactStagingDirectory)"
+#       cleanTargetFolder: true
+
+#   ## Archive the files into a zip file for publishing
+#   - task: ArchiveFiles@2
+#     inputs:
+#       rootFolderOrFile: $(Build.ArtifactStagingDirectory)
+#       archiveType: "zip"
+#       archiveFile: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
+#       includeRootFolder: false
+
+#   ## Publish the zip file
+#   - task: PublishBuildArtifacts@1
+#     inputs:
+#       azureSubscription: $(azureSubscription)
+#       pathtoPublish: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
+#       StartupCommand: "npm run start"
+#       ScriptType: "Inline Script"
+#       InlineScript: |
+#         npm install
+#         npm run build --if-present
+
 trigger:
   - master
 
 pool:
   vmImage: "ubuntu 16.04"
 
-variables:
-  projectFolder: "src"
-  buildOutputFolder: "build"
-
 steps:
-  - script: |
-      pushd $(projectFolder) && npm install && popd
-      pushd $(projectFolder) && npm run build && popd
-
   - task: CopyFiles@2
+    displayName: "Copy Site to Compile Folder"
     inputs:
       sourceFolder: "$(buildOutputFolder)"
       contents: "**/*"
       targetFolder: "$(Build.ArtifactStagingDirectory)"
       cleanTargetFolder: true
 
-  ## Archive the files into a zip file for publishing
-  - task: ArchiveFiles@2
-    inputs:
-      rootFolderOrFile: $(Build.ArtifactStagingDirectory)
-      archiveType: "zip"
-      archiveFile: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
-      includeRootFolder: false
-
-  ## Publish the zip file
   - task: PublishBuildArtifacts@1
+    displayName: "Publish Site"
     inputs:
-      azureSubscription: $(azureSubscription)
-      pathtoPublish: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
-      StartupCommand: "npm run start"
-      ScriptType: "Inline Script"
-      InlineScript: |
-        npm install
-        npm run build --if-present
+      ArtifactName: Site
