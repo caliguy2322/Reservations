@@ -51,9 +51,6 @@ pool:
   vmImage: "ubuntu 16.04"
 
 steps:
-  - label: ":hammer: Tests"
-    command: echo "$(buildOutputFolder)"
-
   - task: CopyFiles@2
     displayName: "Copy files to compile folder"
     inputs:
@@ -61,6 +58,7 @@ steps:
       contents: "**/*"
       targetFolder: "$(Build.ArtifactStagingDirectory)"
       cleanTargetFolder: true
+      script: echo "hello world"
 
   - task: PublishBuildArtifacts@1
     displayName: "Publish Site"
